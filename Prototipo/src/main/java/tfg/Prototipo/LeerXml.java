@@ -10,18 +10,16 @@ import java.io.IOException;
 public class LeerXml {
 
     public static void main(String[] args) {
-        String url = "https://dblp.org/search/publ/api?q=toc%3Adb/journals/tse/tse37.bht%3A&h=1000&format=xml";
+        String url = "https://dblp.org/search/publ/api?q=toc%3Adb/journals/tse/tse37.bht%3A&h=1000&format=xml";//url del archivo xml
 
         try {
-            Document document = Jsoup.connect(url).get();
+            Document documento = Jsoup.connect(url).get();//guardo en documento el xml
 
-            // Encuentra todas las etiquetas <ee>
-            Elements eeElements = document.select("ee");
+            Elements eeElementos = documento.select("ee");//busco en el documento xml las etiquetas <ee> ya que es donde se encuentran las url de los articulos
 
-            // Itera sobre las etiquetas <ee> y muestra los enlaces
-            for (Element eeElement : eeElements) {
-                String link = eeElement.text();
-                System.out.println("Enlace: " + link);
+            for (Element eeElemento : eeElementos) {//itero sobre las etiquetas <ee>
+                String link = eeElemento.text();//extraigo el texto del elemento
+                System.out.println("Enlace: " + link);//lo muestro por pantalla
             }
 
         } catch (IOException e) {
