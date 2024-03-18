@@ -15,11 +15,11 @@ public class LeerXml {
         try {
             Document documento = Jsoup.connect(url).get();//guardo en documento el xml
 
-            Elements eeElementos = documento.select("ee");//busco en el documento xml las etiquetas <ee> ya que es donde se encuentran las url de los articulos
+            Elements titleElementos = documento.select("title");//busco en el documento xml las etiquetas <ee> ya que es donde se encuentran las url de los articulos
 
-            for (Element eeElemento : eeElementos) {//itero sobre las etiquetas <ee>
-                String link = eeElemento.text();//extraigo el texto del elemento
-                System.out.println("Enlace: " + link);//lo muestro por pantalla
+            for (Element titleElemento : titleElementos) {//itero sobre las etiquetas <ee>
+                String link = titleElemento.text();//extraigo el texto del elemento
+                System.out.println("Titulo: " + link);//lo muestro por pantalla
             }
 
         } catch (IOException e) {

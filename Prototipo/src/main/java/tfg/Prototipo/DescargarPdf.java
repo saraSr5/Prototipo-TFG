@@ -8,10 +8,10 @@ import java.net.URL;
 
 public class DescargarPdf {
     public static void main(String[] args) {
-        String url = "https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=5441292&casa_token=KhOx_Pqq9AUAAAAA:_CoOzEik5EQjSFRUoY3L1l5YqjiUb_qf_IFaNoyNfTIVgjKC__Rm5cRyVI86WnvVTCBxIOBj9p8&tag=1";// url
+        String url = "https://amatriain.net/pubs/xamatriain-IEEE-TSE-2010.pdf";// url
                                                                                                                 // del
                                                                                                                 // pdf
-        String destino = "C:\\Users\\Admin\\Desktop\\PDF descargado\\miPdf.pdf"; // destino donde se descargara el pdf
+        String destino = "C:\\Users\\Admin\\Desktop\\PDF descargado\\articulo.pdf"; // destino donde se descargara el pdf
 
         try {
             descargarPDF(url, destino);

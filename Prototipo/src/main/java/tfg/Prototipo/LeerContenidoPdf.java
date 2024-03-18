@@ -8,7 +8,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 public class LeerContenidoPdf {
 
     public static void main(String[] args) {
-        String rutaPDF = "C:/Users/Admin/Desktop/Ejemplo para descargar pdf/Frameworks_Generate_Domain-Specific_Languages_A_Case_Study_in_the_Multimedia_Domain.pdf";
+        String rutaPDF = "C:/Users/Admin/Desktop/PDF descargado/articulo.pdf";
 
         try (PDDocument documento = PDDocument.load(new File(rutaPDF))) {//cargo el documento
             PDFTextStripper extraer = new PDFTextStripper();//creo instancia de PDFTextStripper
