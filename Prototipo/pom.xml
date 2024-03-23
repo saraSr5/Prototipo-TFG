@@ -16,10 +16,10 @@
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
+      	<groupId>junit</groupId>
+      	<artifactId>junit</artifactId>
+      	<version>3.8.1</version>
+      	<scope>test</scope>
     </dependency>
     <dependency>
 		<groupId>org.apache.pdfbox</groupId>
@@ -27,9 +27,34 @@
         <version>2.0.30</version>
 	</dependency>
 	<dependency>
-		 <groupId>org.jsoup</groupId>
+		<groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
         <version>1.14.3</version>
+	</dependency>
+	<dependency>
+		<groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>4.9.1</version>
+	</dependency>
+	<dependency>
+		<groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20210307</version>
+	</dependency>
+	<dependency>
+		<groupId>org.sonatype.aether</groupId>
+		<artifactId>aether-api</artifactId>
+		<version>1.7</version>
+	</dependency>
+	<dependency>
+		<groupId>org.xhtmlrenderer</groupId>
+        <artifactId>flying-saucer-core</artifactId>
+        <version>9.1.22</version>
+	</dependency>
+	<dependency>
+		<groupId>org.xhtmlrenderer</groupId>
+        <artifactId>flying-saucer-pdf</artifactId>
+        <version>9.1.22</version>
 	</dependency>
   </dependencies>
 </project>
