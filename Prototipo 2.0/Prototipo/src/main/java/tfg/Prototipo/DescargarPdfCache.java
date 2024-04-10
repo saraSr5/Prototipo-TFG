@@ -11,30 +11,30 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class DescargarPdfCache {
-    private static final String DIR_CACHE = "C:\\Users\\Admin\\Desktop\\PDF descargado\\";
-    private static final String PDF_EXTENSION = "pdf";
+    private static final String DIR_CACHE = "C:\\Users\\Admin\\Desktop\\PDF descargado\\";//La ruta de los pdfs
+    private static final String PDF_EXTENSION = "pdf";//la extension final
 
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.out.println("Uso: java DescargarPdfCache <url del PDF> <título del artículo>");
+            System.out.println("Error tienen que ser 2 argumentos");
             return;
         }
 
-        String url = args[0];
-        String tituloArticulo = args[1];
+        String url = args[0];//cojo la url de descarga del pdf de la linea de comandos
+        String tituloArticulo = args[1];//cojo el titulo del articulo de la linea de comandos
         
-        // Inicializar la base de datos
+        //Inicializo la base de datos
         ConexionBaseDeDatos.initializeDatabase();
 
         try {
-            // Verificar si el nombre del PDF ya existe en la base de datos
+            //Miro si el nombre del pdf ya existe en la base de datos
             if (!ConexionBaseDeDatos.isNombrePDFExistente(tituloArticulo)) {
-                String destino = DIR_CACHE + limpiarNombreArticulo(tituloArticulo) + PDF_EXTENSION;
-                if (!archivoExiste(destino)) {
+                String destino = DIR_CACHE + limpiarNombreArticulo(tituloArticulo) + PDF_EXTENSION;//Construyo la ruta donde va a ser descargado
+                if (!archivoExiste(destino)) {//Si no existe lo descargo
                     descargarPDF(url, destino);
                     System.out.println("PDF descargado correctamente en: " + destino);
                     
-                    // Insertar el nombre del PDF en la tabla de nombres
+                    //Inserto el nombre del PDF en la tabla de nombres
                     ConexionBaseDeDatos.insertNombrePDF(tituloArticulo);
                     System.out.println("Nombre de PDF insertado en la base de datos.");
                 } else {
@@ -63,12 +63,12 @@ public class DescargarPdfCache {
             }
         }
     }
-
+//Funcion para mirar si el archivo existe en la ruta especificada de descarga
     public static boolean archivoExiste(String ruta) {
         Path direccion = Paths.get(ruta);
         return Files.exists(direccion);
     }
-
+//Funcion para que el nombre del pdf no de problemas 
     public static String limpiarNombreArticulo(String nombre) {
         return nombre.replaceAll("[<>:\"/\\|?*]", "_");
     }

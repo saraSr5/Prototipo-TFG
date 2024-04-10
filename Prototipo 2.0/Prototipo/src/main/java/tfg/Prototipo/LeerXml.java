@@ -15,7 +15,7 @@ public class LeerXml {
             return;
         }
 
-        String url = args[0];//la url de la linea de comandos
+        String url = args[0];//cojo la url de la linea de comandos
 
         try {
             Document documento = Jsoup.connect(url).get();//guardo en documento el xml
