@@ -16,7 +16,7 @@ Por ejemplo:
 5. Titulo: Semi-Proving: An Integrated Method for Program Proving, Testing, and Debugging.
 Resultado: los enlaces de descarga del pdf obtenidos del JSON junto con el nombre del artículo.
 
-Ejecutar la clase "DescargarPdfCache.java" con los argumentos(ambos obtenidos de la ejecución de la clase anterior):
+Ejecutar la clase "DescargarPdfCache.java" con los argumentos(ambos obtenidos de la ejecución de la clase anterior). Además en esta clase se debe cambiar el apartado de DIR_CACHE = "C:\\Users\\Admin\\Desktop\\PDF descargado\\" por el destino donde se quieren descargar los pdfs en local:
 "url de descarga de pdf" "Titulo del articulo(con el punto final incluido"
 Resultado: Se descarga el pdf mostrando su ruta de descarga y se añade a la tabla de nombre_pdfs de la base de datos si no se ha descargado antes. Si se ha descargado antes muestra un mensaje indicándolo.
 
