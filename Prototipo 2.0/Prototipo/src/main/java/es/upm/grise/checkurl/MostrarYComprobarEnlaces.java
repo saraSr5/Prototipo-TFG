@@ -1,4 +1,4 @@
-package tfg.Prototipo;
+package es.upm.grise.checkurl;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,26 +13,34 @@ import org.jsoup.Jsoup;
 
 public class MostrarYComprobarEnlaces {
 
-    public static void main(String[] args) {
-        if (args.length != 2) {//Los argumentos tienen que ser 2
-            System.out.println("Error tienen que ser 2 argumentos");
-            return;
-        }
+	public static void main(String[] args) {
+		if (args.length == 0) {
+			System.err.println("No se ha proporcionado ningun path");
+			System.exit(1);
+		}
 
-        String rutaPDF = args[0]; //Cojo la ruta del pdf desde la línea de comandos
-        String doi = args[1]; //Cojo el doi del artículo desde la línea de comandos
+		if (args.length % 2 != 0) {
+			System.err.println("Algun path no tiene asociado un titulo, o viceversa");
+			System.exit(1);
+		}
 
-        try (PDDocument documento = PDDocument.load(new File(rutaPDF))) {
-            PDFTextStripper textStripper = new PDFTextStripper();//instancia de testStripper
-            String contenido = textStripper.getText(documento);//guardo en contenido el texto pdf
+		for (int i = 0; i <= args.length - 2; i += 2) {
 
-            //Guardo la verificacion de la url en la base de datos
-            guardarVerificacionEnBaseDeDatos(contenido, doi);
+			String rutaPDF = args[i]; // Cojo la ruta del pdf desde la línea de comandos
+			String doi = args[1 + 1]; // Cojo el doi del artículo desde la línea de comandos
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+			try (PDDocument documento = PDDocument.load(new File(rutaPDF))) {
+				PDFTextStripper textStripper = new PDFTextStripper();// instancia de testStripper
+				String contenido = textStripper.getText(documento);// guardo en contenido el texto pdf
+
+				// Guardo la verificacion de la url en la base de datos
+				guardarVerificacionEnBaseDeDatos(contenido, doi);
+
+			} catch (IOException e) {
+				System.err.println(e.getMessage() + "\"" + rutaPDF + "\"");
+			}
+		}
+	}
 
     private static void guardarVerificacionEnBaseDeDatos(String texto, String doi) {
         String simbolos = "\\b(?:https?|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\\/%=~_|]";//para las urls
@@ -62,7 +70,7 @@ public class MostrarYComprobarEnlaces {
                 HttpStatusException httpException = (HttpStatusException) e;
                 return httpException.getStatusCode();//Cojo el codigo del servidor cuando falla
             } else {
-                e.printStackTrace();
+				System.err.println(e.getMessage() + "\"" + enlace + "\"");
                 return 0;
             }
         }

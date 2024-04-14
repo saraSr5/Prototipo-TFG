@@ -1,4 +1,4 @@
-package tfg.Prototipo;
+package es.upm.grise.checkurl;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
