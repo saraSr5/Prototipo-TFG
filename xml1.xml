@@ -1,0 +1,124 @@
+<result>
+<query id="547213">:facetid:toc:\"db/journals/tse/tse37.bht\"</query>
+<status code="200">OK</status>
+<time unit="msecs">65.54</time>
+<completions total="1" computed="1" sent="1">
+<c sc="51" dc="51" oc="51" id="43805511">:facetid:toc:db/journals/tse/tse37.bht</c>
+</completions>
+<hits total="51" computed="51" sent="51" first="0">
+<hit score="1" id="4669008">
+<info>
+<authors>
+<author pid="99/6075">Xavier Amatriain</author>
+<author pid="86/1554">Pau Arumí</author>
+</authors>
+<title>Frameworks Generate Domain-Specific Languages: A Case Study in the Multimedia Domain.</title>
+<venue>IEEE Trans. Software Eng.</venue>
+<volume>37</volume>
+<number>4</number>
+<pages>544-558</pages>
+<year>2011</year>
+<type>Journal Articles</type>
+<access>closed</access>
+<key>journals/tse/AmatriainA11</key>
+<doi>10.1109/TSE.2010.48</doi>
+<ee>https://doi.org/10.1109/TSE.2010.48</ee>
+<url>https://dblp.org/rec/journals/tse/AmatriainA11</url>
+</info>
+<url>URL#4669008</url>
+</hit>
+<hit score="1" id="4669012">
+<info>
+<authors>
+<author pid="89/3322">Alexandre Bergel</author>
+<author pid="28/1093">William Harrison</author>
+<author pid="c/VCahill">Vinny Cahill</author>
+<author pid="c/SClarke">Siobhán Clarke</author>
+</authors>
+<title>FlowTalk: Language Support for Long-Latency Operations in Embedded Devices.</title>
+<venue>IEEE Trans. Software Eng.</venue>
+<volume>37</volume>
+<number>4</number>
+<pages>526-543</pages>
+<year>2011</year>
+<type>Journal Articles</type>
+<access>closed</access>
+<key>journals/tse/BergelHCC11</key>
+<doi>10.1109/TSE.2010.66</doi>
+<ee>https://doi.org/10.1109/TSE.2010.66</ee>
+<url>https://dblp.org/rec/journals/tse/BergelHCC11</url>
+</info>
+<url>URL#4669012</url>
+</hit>
+<hit score="1" id="4669013">
+<info>
+<authors>
+<author pid="79/6638">Peter G. Bishop</author>
+<author pid="36/2140">Robin E. Bloomfield</author>
+<author pid="20/555">Bev Littlewood</author>
+<author pid="05/2297">Andrey Povyakalo</author>
+<author pid="42/2975-1">David Wright 0001</author>
+</authors>
+<title>Toward a Formalism for Conservative Claims about the Dependability of Software-Based Systems.</title>
+<venue>IEEE Trans. Software Eng.</venue>
+<volume>37</volume>
+<number>5</number>
+<pages>708-717</pages>
+<year>2011</year>
+<type>Journal Articles</type>
+<access>closed</access>
+<key>journals/tse/BishopBLPW11</key>
+<doi>10.1109/TSE.2010.67</doi>
+<ee>https://doi.org/10.1109/TSE.2010.67</ee>
+<url>https://dblp.org/rec/journals/tse/BishopBLPW11</url>
+</info>
+<url>URL#4669013</url>
+</hit>
+<hit score="1" id="4669016">
+<info>
+<authors>
+<author pid="15/2194">Radu Calinescu</author>
+<author pid="55/4092">Lars Grunske</author>
+<author pid="k/MartaZKwiatkowska">Marta Z. Kwiatkowska</author>
+<author pid="80/191">Raffaela Mirandola</author>
+<author pid="02/2374">Giordano Tamburrelli</author>
+</authors>
+<title>Dynamic QoS Management and Optimization in Service-Based Systems.</title>
+<venue>IEEE Trans. Software Eng.</venue>
+<volume>37</volume>
+<number>3</number>
+<pages>387-409</pages>
+<year>2011</year>
+<type>Journal Articles</type>
+<access>closed</access>
+<key>journals/tse/CalinescuGKMT11</key>
+<doi>10.1109/TSE.2010.92</doi>
+<ee>https://doi.org/10.1109/TSE.2010.92</ee>
+<url>https://dblp.org/rec/journals/tse/CalinescuGKMT11</url>
+</info>
+<url>URL#4669016</url>
+</hit>
+<hit score="1" id="4669019">
+<info>
+<authors>
+<author pid="88/612">Tsong Yueh Chen</author>
+<author pid="t/THTse">T. H. Tse</author>
+<author pid="77/5181">Zhiquan Zhou</author>
+</authors>
+<title>Semi-Proving: An Integrated Method for Program Proving, Testing, and Debugging.</title>
+<venue>IEEE Trans. Software Eng.</venue>
+<volume>37</volume>
+<number>1</number>
+<pages>109-125</pages>
+<year>2011</year>
+<type>Journal Articles</type>
+<access>closed</access>
+<key>journals/tse/ChenTZ11</key>
+<doi>10.1109/TSE.2010.23</doi>
+<ee>https://doi.org/10.1109/TSE.2010.23</ee>
+<url>https://dblp.org/rec/journals/tse/ChenTZ11</url>
+</info>
+<url>URL#4669019</url>
+</hit>
+</hits>
+</result>

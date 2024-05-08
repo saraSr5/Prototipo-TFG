@@ -1,4 +1,4 @@
-package tfg.Prototipo;
+package es.upm.grise.checkurl;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -16,29 +16,32 @@ public class ObtenerPdfConSerpApi {
     private static final String API_KEY = "4d30e7fc9aaf5249b6828c95a24364fd48a1128914289250328a1f522ce5663f";//API_KEY de SerpApi para buscar
 
     public static void main(String[] args) {
-        if (args.length != 1) {
-            System.err.println("Error debe ser 1 argumento");
+        if (args.length == 0) {
+            System.err.println("No se ha proporcionado ningun titulo");
             System.exit(1);
         }
+        
+        for(String tituloArticulo : args) { //Cojo el titulo de la linea de comandos
+        	
+            ObtenerPdfConSerpApi obtPdf = new ObtenerPdfConSerpApi();
 
-        String tituloArticulo = args[0];//Cojo el titulo de la linea de comandos
-        System.out.println("Título del artículo: " + tituloArticulo); 
+            try {
+                String jsonRespuesta = obtPdf.obtenerJSON(tituloArticulo);//Conecto para buscar el JSON
 
-        ObtenerPdfConSerpApi obtPdf = new ObtenerPdfConSerpApi();
-
-        try {
-            String jsonRespuesta = obtPdf.obtenerJSON(tituloArticulo);//Conecto para buscar el JSON
-
-            String link = obtenerPrimerLink(jsonRespuesta);//Miro el JSON y cojo el enlace de descarga
-            if (link != null) {
-                System.out.println("El primer enlace encontrado es: " + link);
-            } else {
-                System.out.println("No se encontraron enlaces en el JSON obtenido.");
+                String link = obtenerPrimerLink(jsonRespuesta);//Miro el JSON y cojo el enlace de descarga
+                if (link != null) {
+                    System.out.print("\"" + tituloArticulo + "\" "); 
+                    System.out.println("\"" + link + "\"");
+                } else {
+                    System.err.println("No se encontraron enlaces en el JSON obtenido: " + "\"" + tituloArticulo + "\" ");
+                }
+            } catch (IOException e) {
+				System.err.println(e.getMessage() + "\"" + tituloArticulo + "\"");
+				System.exit(1);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
+    
 //Funcion para obtener el JSON
     public String obtenerJSON(String tituloArticulo) throws IOException {
         OkHttpClient client = new OkHttpClient();
@@ -72,7 +75,7 @@ public class ObtenerPdfConSerpApi {
             }
             return null;
         } catch (JSONException e) {
-            e.printStackTrace();
+			System.err.println(e.getMessage());
             return null;
         }
     }
