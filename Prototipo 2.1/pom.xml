@@ -12,7 +12,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+</properties>
 
   <dependencies>
     <dependency>
@@ -61,6 +61,11 @@
     	<artifactId>sqlite-jdbc</artifactId>
     	<version>3.34.0</version>
 	</dependency>
+	<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-lang3</artifactId>
+    <version>3.14.0</version>
+</dependency>
   </dependencies>
 
 	<build>
@@ -101,6 +106,11 @@
 					</execution>
 				</executions>
 				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>es.upm.grise.checkurl.RunEntireFlow</mainClass>
+						</manifest>
+					</archive>
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>

@@ -18,20 +18,51 @@ import java.util.List;
 public class ObtenerPdfConSerpApi {
     private static final String API_KEY = "4d30e7fc9aaf5249b6828c95a24364fd48a1128914289250328a1f522ce5663f";//API_KEY de SerpApi para buscar
 
-    public static String[][] main(String[] args) {
+    // Hace lo mismo que obtenerTodosLosEnlacesPDF(), pero genera salida a stdout
+	// Al usar stdout, los strings deben ir entrecomillados para facilitar el procesamiento posterior
+    public static void main(String[] args) {
         if (args.length == 0) {
-            System.err.println("No se ha proporcionado ningún título.");
+            System.err.println("No se ha proporcionado ningún título");
             System.exit(1);
         }
         
-        List<String[]> titulosYEnlaces = new ArrayList<>();
+        int numeroEnlaces = 0;
         
-        for(String tituloArticulo : args) { //Cojo el título de la línea de comandos
-            String link = obtenerEnlacePDF(tituloArticulo);
-            if (link != null) {
-                titulosYEnlaces.add(new String[]{tituloArticulo, link});
-            } else {
-                System.err.println("No se encontraron enlaces para: " + tituloArticulo);
+        System.err.println();
+		System.err.println();
+		System.err.println();
+		System.err.println("Getting links from SerAPI");
+		System.err.println("---------------------------------------------------------");
+        
+        for(String tituloArticulo : args) { //Cojo el título de la línea de comandos, pero uno a uno
+        	
+        	String[] respuesta = obtenerEnlacePDF(tituloArticulo);
+        	
+            if (respuesta != null) {
+                System.out.println( "\"" + respuesta[0] + "\"" + " " + "\"" + respuesta[1] + "\"");
+                numeroEnlaces++;
+            }
+        }
+        
+        System.err.println();
+        System.err.println(numeroEnlaces + " links read");
+    }
+    
+    //Método para obtener todos los enlaces PDF
+    public static String[][] obtenerTodosLosEnlacesPDF(String[] titulosArticulos) {
+        List<String[]> titulosYEnlaces = new ArrayList<String[]>();
+        
+        if (titulosArticulos.length == 0) {
+            System.err.println("No se ha proporcionado ningún título");
+            System.exit(1);
+        }
+        
+        for(String tituloArticulo : titulosArticulos) {
+        	
+        	String[] respuesta = obtenerEnlacePDF(tituloArticulo);
+        	
+            if (respuesta != null) {
+            	titulosYEnlaces.add(respuesta);
             }
         }
         
@@ -40,38 +71,43 @@ public class ObtenerPdfConSerpApi {
     }
 
     //Método para obtener el enlace PDF de un título de artículo utilizando la API de SerpApi
-    public static String obtenerEnlacePDF(String tituloArticulo) {
-    OkHttpClient client = new OkHttpClient();
+    public static String[] obtenerEnlacePDF(String tituloArticulo) {
+    	
+    	OkHttpClient client = new OkHttpClient();
+    	String link = null;
 
-    try {
-        String tituloBuscar = URLEncoder.encode(tituloArticulo, StandardCharsets.UTF_8);
+    	try {
 
-        String urlSerpApi = "https://serpapi.com/search.json?engine=google_scholar&api_key=" + API_KEY + "&q=" + tituloBuscar;
+    		String tituloBuscar = URLEncoder.encode(tituloArticulo, StandardCharsets.UTF_8);
 
-        Request request = new Request.Builder()
-                .url(urlSerpApi)
-                .build();
+    		String urlSerpApi = "https://serpapi.com/search.json?engine=google_scholar&api_key=" + API_KEY + "&q=" + tituloBuscar;
 
-        try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Fallo " + response);
+    		Request request = new Request.Builder()
+    				.url(urlSerpApi)
+    				.build();
 
-            String JSONrespuesta = response.body().string();
-            String link = obtenerPrimerLink(JSONrespuesta);
+    		try (Response response = client.newCall(request).execute()) {
+    			if (!response.isSuccessful()) {
+    				throw new IOException("Fallo " + response);
+    			}
 
-            if (link != null) {
-                return link;
-            } else {
-                System.err.println("No se encontraron enlaces para: " + tituloArticulo);
-                System.err.println("Respuesta JSON de SERP: " + JSONrespuesta);
-                return null;
-            }
-        }
-    } catch (IOException e) {
-        System.err.println("Error al obtener enlace PDF para: " + tituloArticulo);
-        e.printStackTrace();
-        return null;
+    			String JSONrespuesta = response.body().string();
+    			link = obtenerPrimerLink(JSONrespuesta);
+    		}
+
+    	} catch (IOException e) {
+    		System.err.println("Error al obtener enlace PDF para: " + tituloArticulo);
+    	}
+
+    	if (link == null) {
+    		System.err.println("No se encontraron enlaces para: " + tituloArticulo);
+    		return null;
+    	} else {
+        	System.err.println("Link encontrado: " + link);
+    		return new String[]{tituloArticulo, link};
+    	}
+
     }
-}
 
 
     //Método para extraer el primer enlace PDF del JSON de respuesta de SerpApi
@@ -92,8 +128,8 @@ public class ObtenerPdfConSerpApi {
             return null;
         } catch (JSONException e) {
             System.err.println("Error al analizar la respuesta JSON de SerpApi");
-            e.printStackTrace();
             return null;
         }
     }
+
 }

@@ -6,14 +6,14 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class LeerXml {
 
+	// Hace lo mismo que obtenerTitulos(), pero genera la salida a stdout
+	// Al usar stdout, los strings deben ir entrecomillados para facilitar el procesamiento posterior
     public static void main(String[] args) {
         if (args.length != 1) {//si hay mas de un argumento
             System.err.println("Error: solo debe tener un argumento");
@@ -21,13 +21,24 @@ public class LeerXml {
         }
 
         String url = args[0];//cojo la url de la linea de comandos
+        int numeroTitulos = 0;
+        
+        System.err.println();
+		System.err.println();
+		System.err.println();
+		System.err.println("Reading titles from DBML file/URL");
+		System.err.println("---------------------------------------------------------");
         
         String[] titulos = obtenerTitulos(url);
         for (String titulo : titulos) {
-            System.out.println(titulo);
-        }
+            System.out.println("\"" + titulo + "\"");
+            numeroTitulos++;
+        }    
         
+        System.err.println();
+        System.err.println(numeroTitulos + " titles read");
     }
+    
     public static String[] obtenerTitulos(String url) {
 	    Document documento = null;
 	
@@ -48,7 +59,8 @@ public class LeerXml {
 	        String link = titleElemento.text();//extraigo el texto del elemento
 	        link = link.substring(0, link.length() - 1); // eliminamos el punto final
 	        titulos.add(link);//Meto los titulos encontrados al array
-	        System.out.println("\"" + link + "\"");//lo muestro por pantalla
+        	System.err.println("Título encontrado: " + link);
+
 	    }
 	    return titulos.toArray(new String[0]);
 	    }
