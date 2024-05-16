@@ -16,6 +16,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.jsoup.Connection;
@@ -28,11 +30,9 @@ public class MostrarYComprobarEnlaces {
 		
 	public static void main(String[] args) {
 		
-		System.err.println();
-		System.err.println();
-		System.err.println();
 		System.err.println("Checking URLs");
-		System.err.println("---------------------------------------------------------");
+        System.err.println("==================================================================================");
+		System.err.println();
 		
 		if (args.length == 0) {
 			System.err.println("No se ha proporcionado ninguna ruta");
@@ -40,15 +40,27 @@ public class MostrarYComprobarEnlaces {
 		}
 
 		int primeraRuta = 0;
-		boolean forzarRevision = false;
+		boolean forzarRegeneracionTexto = false;
+		boolean forzarBuscarEnlaces = false;
 		
 	    if (args.length %2 !=  0) {
 	    	
-	    	if(args[0].equals("-f")) {
+	    	if(args[0].equals("--regenerate-text")) {
 	    		primeraRuta = 1;
-	    		forzarRevision = true;
-	            System.err.println("Se descargan de nuevo los archivos a la cache");
+	    		forzarRegeneracionTexto = true;
+	            System.err.println();
+	            System.err.println("Se vuelve transformar el PDF a texto antes y se buscan de nuevo los enlaces");
+	            System.err.println();
 	    	}
+	    	
+	    	if(args[0].equals("--force-link-search")) {
+	    		primeraRuta = 1;
+	    		forzarBuscarEnlaces = true;
+	            System.err.println();
+	            System.err.println("Se analizan de nuevo los enlaces de los ficheros, usando el texto existente");
+	            System.err.println();
+	    	}
+	    	
 	    }
 		
 		java.util.logging.Logger.getLogger("org.apache.pdfbox").setLevel(java.util.logging.Level.SEVERE);
@@ -59,9 +71,11 @@ public class MostrarYComprobarEnlaces {
 			String rutaPDF = args[i]; //Cojo la ruta del PDF
 			String doi = args[i + 1]; //Cojo el DOI del artículo 
 			
-			numeroTotalEnlaces += extraeEnlacesDeArticulo(doi, rutaPDF, forzarRevision);
+			numeroTotalEnlaces += extraeEnlacesDeArticulo(doi, rutaPDF, forzarRegeneracionTexto, forzarBuscarEnlaces);
 		}
 		
+		System.err.println();
+		System.err.println();
 		System.err.println();
 		System.err.println(numeroTotalEnlaces + " links found");
 
@@ -88,19 +102,23 @@ public class MostrarYComprobarEnlaces {
 	    	
 	        String rutaPDF = rutaYTitulo[0];
 	    	String doi = rutaYTitulo[1];
-			numeroTotalEnlaces += extraeEnlacesDeArticulo(doi, rutaPDF, false);
+			numeroTotalEnlaces += extraeEnlacesDeArticulo(doi, rutaPDF, false, false);
 		}
 	    
 		return numeroTotalEnlaces;
 	}
 
-	private static int extraeEnlacesDeArticulo(String doi, String rutaPDF, boolean forzarRevision) {
+	private static int extraeEnlacesDeArticulo(String doi, String rutaPDF, boolean forzarRegeneracionTexto, boolean forzarBuscarEnlaces) {
 		//Comprobamos si la version TXT del documento ya existe en la cache
 		String nombreSinExtension = rutaPDF.substring(0, rutaPDF.length() - 3);
 		String nombreConExtensionTXT = nombreSinExtension + "txt";
 
 		Path ficheroTexto = Paths.get(nombreConExtensionTXT);
-		if(!Files.exists(ficheroTexto) || forzarRevision) {
+		
+		// Si no hay un fichero de texto asociado, el PDF corresponde con un nuevo fichero
+		boolean nuevoFicheroPDF = !Files.exists(ficheroTexto);
+		
+		if(nuevoFicheroPDF || forzarRegeneracionTexto) {
 
 			//Obtenemos el documento y lo transformamos a texto
 			PDDocument documento;
@@ -109,6 +127,7 @@ public class MostrarYComprobarEnlaces {
 			try {
 				documento = PDDocument.load(new File(rutaPDF));
 			} catch (IOException e) {
+		        System.err.println();
 				System.err.println("Formato incorrecto o no se puede acceder al fichero: " + rutaPDF);
 				return 0;
 			}
@@ -118,9 +137,13 @@ public class MostrarYComprobarEnlaces {
 				PDFTextStripper textStripper = new PDFTextStripper();
 				contenido = textStripper.getText(documento);
 			} catch (IOException e) {
+		        System.err.println();
 				System.err.println("No se puede transformar a texto el fichero: " + rutaPDF);
 				return 0;
 			}
+			
+			//Un problema gordo son los retornos de carro. Es preferible eliminarlos.
+			contenido = contenido.replaceAll("\\n", "");
 
 
 			try {
@@ -135,79 +158,107 @@ public class MostrarYComprobarEnlaces {
 				Files.writeString(ficheroTexto, contenido, StandardCharsets.UTF_8);
 
 			} catch (IOException e) {
+		        System.err.println();
 				System.err.println("No se puede escribir el fichero: " + ficheroTexto);
 				return 0;
 			}
-
-			ConexionBaseDeDatos.EliminarEnlacesBD(doi);
-
+			
 		}
-
-		try {
-			String contenido = Files.readString(ficheroTexto);
-			
-			//Guardo la verificación de la URL en la base de datos
-			List<Integer> enlaces = guardarVerificacionEnBaseDeDatos(contenido, doi);
-			
-			//Chequeamos los http y vemos si difieren del numero de enlaces encontrado
-			int numeroHTTP = StringUtils.countMatches(contenido, "http");
-			
-			int numeroEnlaces = enlaces.size();
-							
-			if (numeroEnlaces < numeroHTTP) {
+		
 				
-				System.err.println("Faltan por recuperar " + (numeroHTTP - numeroEnlaces) + " enlaces en el fichero: " + ficheroTexto);
-														
-				Files.delete(ficheroTexto);
-				Files.createFile(ficheroTexto);
-				Files.writeString(ficheroTexto, generarTextoConHTTPMarcado(contenido, enlaces), StandardCharsets.UTF_8);
+		if(nuevoFicheroPDF || forzarRegeneracionTexto || forzarBuscarEnlaces) {
+					
+			try {
+				
+				String contenido = Files.readString(ficheroTexto);
+				
+				//Guardo la verificación de la URL en la base de datos
+				List<Pair<Integer, Integer>> enlaces = guardarVerificacionEnBaseDeDatos(contenido, doi);
+				
+				//Chequeamos los http y vemos si difieren del numero de enlaces encontrado
+				int numeroHTTP = StringUtils.countMatches(contenido, "http");
+				
+				int numeroEnlaces = enlaces.size();
+				int numeroErrores = obtenerNumeroErrores(enlaces);
+								
+				if (numeroEnlaces < numeroHTTP || numeroErrores > 0) {
+					
+					if(numeroEnlaces < numeroHTTP) {
+						
+						System.err.println();
+						System.err.println("Faltan por recuperar " + (numeroHTTP - numeroEnlaces) + " enlaces en el fichero: " + ficheroTexto);
+					}
+					
+					if(numeroErrores > 0) {
+						
+						System.err.println();
+						System.err.println("Hay " + numeroErrores + " enlace(s) con errores de acceso (0) en el fichero: " + ficheroTexto);
+						
+					}
+					
+															
+					Files.delete(ficheroTexto);
+					Files.createFile(ficheroTexto);
+					Files.writeString(ficheroTexto, generarTextoConHTTPMarcado(contenido, enlaces), StandardCharsets.UTF_8);
 
+				}
+				
+				return numeroEnlaces;
+				
+			} catch (IOException e) {
+				System.err.println();
+				System.err.println("No se pueden identificar los links del fichero: " + ficheroTexto);
+				return 0;
 			}
 			
-			return numeroEnlaces;
-			
-		} catch (IOException e) {
-			System.err.println("No se pueden identificar los links del fichero: " + ficheroTexto);
-			return 0;
 		}
+		
+		return 0;
+		
 	}
 
-	private static List<Integer> guardarVerificacionEnBaseDeDatos(String texto, String doi) {
-        String simbolos = "\\b(?:https?|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\\/%=~_|]";
+	private static List<Pair<Integer, Integer>> guardarVerificacionEnBaseDeDatos(String texto, String doi) {
+        //String simbolos = "\\b(?:https?|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\\/%=~_|]";
+        String simbolos = "(?:https?|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\\/%=~_|]";
+
         Pattern p = Pattern.compile(simbolos);
         Matcher matcher = p.matcher(texto);
-        List<Integer> enlaces = new ArrayList<Integer>();
+        List<Pair<Integer, Integer>> enlaces = new ArrayList<Pair<Integer, Integer>>();
+        
+        System.err.println();
+        System.err.println("Artículo: " + doi);
+        System.err.println("----------------------------------------------------------------------------------");
+        System.err.println();
 
         while (matcher.find()) {
         	
-            int posicion = matcher.start();        	
-        	enlaces.add(posicion);
-        	
+            int posicionEnlace = matcher.start();        	
+
             String enlace = matcher.group();
         	
             String contexto = "";
-            if(posicion >= CONTEXT_SIZE ) {
+            if(posicionEnlace >= CONTEXT_SIZE ) {
             	
-            	contexto = texto.substring(posicion - CONTEXT_SIZE, posicion);
+            	contexto = texto.substring(posicionEnlace - CONTEXT_SIZE, posicionEnlace);
             	
             } else {
             	
-            	if (posicion > 0 ) {
+            	if (posicionEnlace > 0 ) {
             		
-                	contexto = texto.substring(0, posicion);
+                	contexto = texto.substring(0, posicionEnlace);
             		            		
             	}
             }
                         
             contexto += enlace;
             
-            if(texto.length() - ( posicion + enlace.length() ) >= CONTEXT_SIZE ) {
+            if(texto.length() - ( posicionEnlace + enlace.length() ) >= CONTEXT_SIZE ) {
             	
-            	contexto += texto.substring(posicion + enlace.length(), posicion + enlace.length() + CONTEXT_SIZE);
+            	contexto += texto.substring(posicionEnlace + enlace.length(), posicionEnlace + enlace.length() + CONTEXT_SIZE);
             	
             } else {
             		
-                	contexto += texto.substring(posicion + enlace.length(), texto.length());
+                	contexto += texto.substring(posicionEnlace + enlace.length(), texto.length());
 
             }
         	            
@@ -216,13 +267,15 @@ public class MostrarYComprobarEnlaces {
             System.err.println("Link identificado: " + enlace + " (" + codigoRespuesta + ")");
             
 			ConexionBaseDeDatos.insertPDF(doi, enlace, codigoRespuesta, contexto);
+			
+			enlaces.add(new ImmutablePair<Integer, Integer>(posicionEnlace, codigoRespuesta));
             
         }
         
         return enlaces;
     }
 	
-	private static String generarTextoConHTTPMarcado(String contenido, List<Integer> matchedOcurrences) {
+	private static String generarTextoConHTTPMarcado(String contenido, List<Pair<Integer, Integer>> enlaces) {
 		
 		String nuevoContenido = "";
 		char[] subCadenaArray = new char[4];
@@ -235,7 +288,9 @@ public class MostrarYComprobarEnlaces {
 						
 			if(subCadena.equals("http")) {
 				
-				if(!matchedOcurrences.contains(i)) {
+				Pair<Integer, Integer> enlace = buscarEnlace(enlaces, i);
+				
+				if(enlace == null || enlace.getRight() == 0 ) {
 					
 					nuevoContenido += ">>>>>>> ";
 					
@@ -259,7 +314,7 @@ public class MostrarYComprobarEnlaces {
 		return nuevoContenido;
     }
 
-    private static int verificarExistencia(String enlace) {
+	private static int verificarExistencia(String enlace) {
         try {
             Connection.Response respuesta = Jsoup.connect(enlace)
                     .followRedirects(true)
@@ -273,9 +328,42 @@ public class MostrarYComprobarEnlaces {
                 HttpStatusException httpException = (HttpStatusException) e;
                 return httpException.getStatusCode();
             } else {
-                System.err.println(e.getMessage() + "\"" + enlace + "\"");
                 return 0;
             }
         }
     }
+	
+	private static int obtenerNumeroErrores(List<Pair<Integer, Integer>> enlaces) {
+		
+		int numeroErrores = 0;
+		
+		for(Pair<Integer, Integer> enlace : enlaces) {
+			
+			if(enlace.getRight() == 0) {
+				
+				numeroErrores ++;
+				
+			}
+			
+		}
+		
+		return numeroErrores;
+	}
+	
+    private static Pair<Integer, Integer> buscarEnlace(List<Pair<Integer, Integer>> enlaces, int posicion) {
+    	
+		for(Pair<Integer, Integer> enlace : enlaces) {
+			
+			if(enlace.getLeft() == posicion) {
+				
+				return enlace;
+				
+			}
+			
+		}
+		
+		return null;
+		
+	}
+
 }

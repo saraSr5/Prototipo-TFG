@@ -19,17 +19,15 @@ public class DescargarPdfCache {
     
     // Hace lo mismo que obtenerTodosLosEnlacesPDF(), pero genera salida a stdout
 	// Al usar stdout, los strings deben ir entrecomillados para facilitar el procesamiento posterior
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException {
     	
     int primerTitulo = 0;
     boolean forzarDescarga = false;
     
-    System.err.println();
-	System.err.println();
-	System.err.println();
 	System.err.println("Downloading PDFs to local cache and populating DB");
-	System.err.println("---------------------------------------------------------");
-
+    System.err.println("==================================================================================");
+	System.err.println();
+	
     if (args.length == 0) {
         System.err.println("No se han proporcionado títulos con enlaces");
         System.exit(1);
@@ -37,10 +35,12 @@ public class DescargarPdfCache {
      
     if (args.length %2 !=  0) {
     	
-    	if(args[0].equals("-f")) {
+    	if(args[0].equals("--force-download")) {
     		primerTitulo = 1;
     		forzarDescarga = true;
+            System.err.println();
             System.err.println("Se descargan de nuevo los archivos a la cache");
+            System.err.println();
     	}
     }
     

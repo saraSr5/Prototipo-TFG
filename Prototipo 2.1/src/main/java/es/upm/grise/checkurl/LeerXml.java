@@ -22,13 +22,11 @@ public class LeerXml {
 
         String url = args[0];//cojo la url de la linea de comandos
         int numeroTitulos = 0;
-        
-        System.err.println();
-		System.err.println();
-		System.err.println();
+
 		System.err.println("Reading titles from DBML file/URL");
-		System.err.println("---------------------------------------------------------");
-        
+        System.err.println("==================================================================================");
+		System.err.println();
+		
         String[] titulos = obtenerTitulos(url);
         for (String titulo : titulos) {
             System.out.println("\"" + titulo + "\"");

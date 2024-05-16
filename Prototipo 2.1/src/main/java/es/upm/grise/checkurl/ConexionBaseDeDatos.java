@@ -7,6 +7,7 @@ import java.sql.SQLException;
 
 public class ConexionBaseDeDatos {
     private static final String DATABASE_URL = "jdbc:sqlite:pdf_database.db";
+
     private static final String CREATE_DOWNLOADED_PDFS_TABLE_SQL = "CREATE TABLE IF NOT EXISTS downloaded_pdfs (doi TEXT, url TEXT, accesible NUMBER, contexto TEXT)";
     private static final String CREATE_NOMBRE_PDFS_TABLE_SQL = "CREATE TABLE IF NOT EXISTS nombre_pdfs (nombre TEXT PRIMARY KEY)";
 
@@ -72,7 +73,7 @@ public class ConexionBaseDeDatos {
         }
     }
 
-	public static void EliminarEnlacesBD(String doi) {
+	public static void EliminarEnlacesDeUnArticulo(String doi) {
 		
         String querySQL = "DELETE FROM downloaded_pdfs WHERE doi = ?";
         
@@ -81,7 +82,7 @@ public class ConexionBaseDeDatos {
         	Connection connection = DriverManager.getConnection(DATABASE_URL);
         	
         	PreparedStatement statement = connection.prepareStatement(querySQL);
-            statement.setString(1, doi);
+        	statement.setString(1, doi);
         	statement.executeUpdate();
         	
         } catch (SQLException e) {

@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ObtenerPdfConSerpApi {
-    private static final String API_KEY = "4d30e7fc9aaf5249b6828c95a24364fd48a1128914289250328a1f522ce5663f";//API_KEY de SerpApi para buscar
+    private static final String API_KEY = "6aea6cdbb761b2678f4c90637590e0b6c64553b20a8ab58aecedbb434cec092b";//API_KEY de SerpApi para buscar
 
     // Hace lo mismo que obtenerTodosLosEnlacesPDF(), pero genera salida a stdout
 	// Al usar stdout, los strings deben ir entrecomillados para facilitar el procesamiento posterior
@@ -28,11 +28,9 @@ public class ObtenerPdfConSerpApi {
         
         int numeroEnlaces = 0;
         
-        System.err.println();
-		System.err.println();
-		System.err.println();
 		System.err.println("Getting links from SerAPI");
-		System.err.println("---------------------------------------------------------");
+        System.err.println("==================================================================================");
+		System.err.println();
         
         for(String tituloArticulo : args) { //Cojo el título de la línea de comandos, pero uno a uno
         	

@@ -14,37 +14,35 @@ public class RunEntireFlow {
 		System.err.println();
 		System.err.println();
 		System.err.println("Reading titles from DBML file/URL");
-		System.err.println("---------------------------------------------------------");
+        System.err.println("==================================================================================");
+		System.err.println();
 		// Guardo los títulos de los artículos en un array
 		String[] titulosArticulos = LeerXml.obtenerTitulos(url);
-		System.err.println();
 		System.err.println(titulosArticulos.length + " titles read");
-
 		System.err.println();
 		System.err.println();
 		System.err.println();
 		System.err.println("Getting links from SerAPI");
-		System.err.println("---------------------------------------------------------");
+        System.err.println("==================================================================================");
+		System.err.println();
 		// Guardo en String [][] los titulos y los enlaces
 		String[][] titulosYEnlaces = ObtenerPdfConSerpApi.obtenerTodosLosEnlacesPDF(titulosArticulos);
-		System.err.println();
 		System.err.println(titulosYEnlaces.length + " titles read");
-
 		System.err.println();
 		System.err.println();
 		System.err.println();
 		System.err.println("Downloading PDFs to local cache and populating DB");
-		System.err.println("---------------------------------------------------------");
+        System.err.println("==================================================================================");
+		System.err.println();
 		// Guardo en String [][] las rutas de descarga y los titulos
 		String[][] rutasYTitulos = DescargarPdfCache.descargarTodosLosPDFs(titulosYEnlaces);
-		System.err.println();
 		System.err.println(rutasYTitulos.length + " PDF files downloaded");
-
 		System.err.println();
 		System.err.println();
 		System.err.println();
 		System.err.println("Checking URLs");
-		System.err.println("---------------------------------------------------------");
+        System.err.println("==================================================================================");
+		System.err.println();
 		int numeroTotalDelinks = MostrarYComprobarEnlaces.extraerTodosLosEnlaces(rutasYTitulos);
 		System.err.println();
 		System.err.println(numeroTotalDelinks + " links found");
