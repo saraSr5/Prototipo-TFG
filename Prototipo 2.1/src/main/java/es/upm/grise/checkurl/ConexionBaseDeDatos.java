@@ -7,7 +7,8 @@ import java.sql.SQLException;
 
 public class ConexionBaseDeDatos {
     private static final String DATABASE_URL = "jdbc:sqlite:pdf_database.db";
-    private static final String CREATE_DOWNLOADED_PDFS_TABLE_SQL = "CREATE TABLE IF NOT EXISTS downloaded_pdfs (doi TEXT, url TEXT, accesible BOOLEAN DEFAULT FALSE)";
+
+    private static final String CREATE_DOWNLOADED_PDFS_TABLE_SQL = "CREATE TABLE IF NOT EXISTS downloaded_pdfs (doi TEXT, url TEXT, accesible NUMBER, contexto TEXT)";
     private static final String CREATE_NOMBRE_PDFS_TABLE_SQL = "CREATE TABLE IF NOT EXISTS nombre_pdfs (nombre TEXT PRIMARY KEY)";
 
     public static void initializeDatabase() {
@@ -21,13 +22,14 @@ public class ConexionBaseDeDatos {
         }
     }
 
-    public static void insertPDF(String doi, String url, int codigoRespuesta) {
-        String insertSQL = "INSERT INTO downloaded_pdfs (doi, url, accesible) VALUES (?, ?, ?)";
+    public static void insertPDF(String doi, String url, int codigoRespuesta, String contexto) {
+        String insertSQL = "INSERT INTO downloaded_pdfs (doi, url, accesible, contexto) VALUES (?, ?, ?, ?)";
         try (Connection connection = DriverManager.getConnection(DATABASE_URL);
              PreparedStatement statement = connection.prepareStatement(insertSQL)) {
             statement.setString(1, doi);
             statement.setString(2, url);
             statement.setLong(3, codigoRespuesta);
+            statement.setString(4, contexto);
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -70,4 +72,21 @@ public class ConexionBaseDeDatos {
             return false;
         }
     }
+
+	public static void EliminarEnlacesDeUnArticulo(String doi) {
+		
+        String querySQL = "DELETE FROM downloaded_pdfs WHERE doi = ?";
+        
+        try {
+        	
+        	Connection connection = DriverManager.getConnection(DATABASE_URL);
+        	
+        	PreparedStatement statement = connection.prepareStatement(querySQL);
+        	statement.setString(1, doi);
+        	statement.executeUpdate();
+        	
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }		
+	}
 }
