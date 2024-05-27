@@ -47,8 +47,12 @@ public class DescargarPdfCache {
     //Preparamos el directorio cache
     chequearDirectorioCache();
 
-    //Inicializamos la base de datos
-    ConexionBaseDeDatos.initializeDatabase();
+    //Si no existe, inicializamos la BD
+    if(!ConexionBaseDeDatos.BDExist()) {
+    	
+        ConexionBaseDeDatos.initializeDatabase();
+
+    }
 
     int numeroFicheros = 0;
     
@@ -115,6 +119,7 @@ public class DescargarPdfCache {
 			String destino = DIR_CACHE + limpiarNombreArticulo(tituloArticulo) + "." + PDF_EXTENSION; 
 			
 			if (!archivoExiste(destino) || forzarDescarga) { // Si el archivo no existe, lo descargo
+				
 				descargarPDF(url, destino);
 
 				// Miro si el nombre del PDF ya existe en la base de datos
@@ -130,7 +135,9 @@ public class DescargarPdfCache {
 				return new String[] { destino, tituloArticulo };
 
 			} else {
-				System.err.println("El PDF ya ha sido descargado previamente: " + "\"" + tituloArticulo + "\"");
+				
+				System.err.println("El PDF ya había sido descargado previamente: " + "\"" + tituloArticulo + "\"");
+			
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

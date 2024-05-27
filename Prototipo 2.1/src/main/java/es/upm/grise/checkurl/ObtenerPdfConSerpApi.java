@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ObtenerPdfConSerpApi {
-    private static final String API_KEY = "6aea6cdbb761b2678f4c90637590e0b6c64553b20a8ab58aecedbb434cec092b";//API_KEY de SerpApi para buscar
+    private static final String API_KEY = "0ddf344f66725e2970b470c76303b3e0ba837aa5017233ac63049f52599b590d";//API_KEY de SerpApi para buscar
 
     // Hace lo mismo que obtenerTodosLosEnlacesPDF(), pero genera salida a stdout
 	// Al usar stdout, los strings deben ir entrecomillados para facilitar el procesamiento posterior
@@ -73,30 +73,50 @@ public class ObtenerPdfConSerpApi {
     	
     	OkHttpClient client = new OkHttpClient();
     	String link = null;
+    	Boolean skip = false;
+    	
+        if(ConexionBaseDeDatos.BDExist()) {
+        	
+        	if(ConexionBaseDeDatos.isNombrePDFExistente(tituloArticulo)) {
+        		
+				System.err.println("El PDF ya había sido descargado previamente: " + "\"" + tituloArticulo + "\"");
+				skip = true;
+        		
+        	} else {
+        		
+        		ConexionBaseDeDatos.initializeDatabase();
+        		
+        	}
+        	
+        }
+        
+        if(!skip) {
+        	
+        	try {
 
-    	try {
+        		String tituloBuscar = URLEncoder.encode(tituloArticulo, StandardCharsets.UTF_8);
 
-    		String tituloBuscar = URLEncoder.encode(tituloArticulo, StandardCharsets.UTF_8);
+        		String urlSerpApi = "https://serpapi.com/search.json?engine=google_scholar&api_key=" + API_KEY + "&q=" + tituloBuscar;
 
-    		String urlSerpApi = "https://serpapi.com/search.json?engine=google_scholar&api_key=" + API_KEY + "&q=" + tituloBuscar;
+        		Request request = new Request.Builder()
+        				.url(urlSerpApi)
+        				.build();
 
-    		Request request = new Request.Builder()
-    				.url(urlSerpApi)
-    				.build();
+        		try (Response response = client.newCall(request).execute()) {
+        			if (!response.isSuccessful()) {
+        				throw new IOException("Fallo " + response);
+        			}
 
-    		try (Response response = client.newCall(request).execute()) {
-    			if (!response.isSuccessful()) {
-    				throw new IOException("Fallo " + response);
-    			}
+        			String JSONrespuesta = response.body().string();
+        			link = obtenerPrimerLink(JSONrespuesta);
+        		}
 
-    			String JSONrespuesta = response.body().string();
-    			link = obtenerPrimerLink(JSONrespuesta);
-    		}
-
-    	} catch (IOException e) {
-    		System.err.println("Error al obtener enlace PDF para: " + tituloArticulo);
-    	}
-
+        	} catch (IOException e) {
+        		System.err.println("Error al obtener enlace PDF para: " + tituloArticulo);
+        	}
+        	
+        }
+        
     	if (link == null) {
     		System.err.println("No se encontraron enlaces para: " + tituloArticulo);
     		return null;
