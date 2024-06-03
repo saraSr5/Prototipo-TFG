@@ -50,5 +50,10 @@ public class RunEntireFlow {
 	}
 }
 
+
+//ATENCIÓN
+//Una vez ejecutada esta clase se debe ejecutar ClasificarURL.java por separado 
+
+
 //mvn exec:java -Dexec.mainClass="es.upm.grise.checkurl.RunEntireFlow" -Dexec.args="https://dblp.org/search/publ/api?q=toc%3Adb/journals/tse/tse37.bht%3A&h=1000&format=xml"
 //https://dblp.org/search/publ/api?q=conf/icse/2024/workshop&h=3&format=xml
