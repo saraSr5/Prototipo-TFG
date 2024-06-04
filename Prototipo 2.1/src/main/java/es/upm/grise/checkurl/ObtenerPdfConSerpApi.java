@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ObtenerPdfConSerpApi {
-    private static final String API_KEY = "0ddf344f66725e2970b470c76303b3e0ba837aa5017233ac63049f52599b590d";//API_KEY de SerpApi para buscar
+    private static final String API_KEY = "";//API_KEY de SerpApi para buscar
 
     // Hace lo mismo que obtenerTodosLosEnlacesPDF(), pero genera salida a stdout
 	// Al usar stdout, los strings deben ir entrecomillados para facilitar el procesamiento posterior
