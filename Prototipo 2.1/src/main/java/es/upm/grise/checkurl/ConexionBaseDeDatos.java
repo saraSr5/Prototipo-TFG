@@ -133,14 +133,15 @@ public class ConexionBaseDeDatos {
 		
 	}
 
-	public static void updateResponseCode(String finalURL, int codigoRespuesta) {
-        String updateSQL = "UPDATE downloaded_pdfs SET accesible = ? WHERE finalURL = ?";
+	public static void updateResponseCode(String URL, String finalURL, int codigoRespuesta) {
+        String updateSQL = "UPDATE downloaded_pdfs SET accesible = ?, finalURL = ? WHERE URL = ?";
         
         try {
         	Connection connection = DriverManager.getConnection(DATABASE_URL);
         	PreparedStatement statement = connection.prepareStatement(updateSQL);
             statement.setInt(1, codigoRespuesta);
             statement.setString(2, finalURL);
+            statement.setString(3, URL);
             statement.executeUpdate();
             
         } catch (SQLException e) {

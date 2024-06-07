@@ -1,11 +1,13 @@
 package es.upm.grise.checkurl;
 
+import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,7 +22,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.action.PDAction;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -38,31 +48,31 @@ public class MostrarYComprobarEnlaces {
 		}
 
 		int primeraRuta = 0;
-		boolean forzarRegeneracionTexto = false;
-		boolean forzarBuscarEnlaces = false;
+		boolean searchLinksinPDF = false;
+		boolean searchLinksinText = false;
 		int numeroTotalEnlaces = 0;
 		
 	    if (args.length %2 !=  0) {
 	    	
-	    	if(args[0].equals("--regenerate-text")) {
+	    	if(args[0].equals("--search-using-pdf")) {
 	    		primeraRuta = 1;
-	    		forzarRegeneracionTexto = true;
+	    		searchLinksinPDF = true;
 	            System.out.println();
-	            System.out.println("Se vuelve transformar el PDF a texto, se buscan de nuevo los enlaces y se comprueba su accesibilidad");
+	            System.out.println("Se borran los enlaces en  BD, se vuelve transformar el PDF a texto, se buscan de nuevo los enlaces y se comprueba su accesibilidad");
 	            System.out.println();
 	    	}
 	    	
-	    	if(args[0].equals("--force-link-search")) {
+	    	if(args[0].equals("--search-using-text")) {
 	    		primeraRuta = 1;
-	    		forzarBuscarEnlaces = true;
+	    		searchLinksinText = true;
 	            System.out.println();
-	            System.out.println("Se analizan de nuevo los enlaces de los ficheros, usando el texto existente. Se comprueba su accesibilidad");
+	            System.out.println("Se buscan enlaces en el texto existente, sin borrar la BD. Se comprueba su accesibilidad");
 	            System.out.println();
 	    	}
 	    	
-	    	if(args[0].equals("--use-db-only")) {
+	    	if(args[0].equals("--search-using-db")) {
 	            System.out.println();
-	            System.out.println("Se comprueba la accesibilidad de los enlaces que están en la base de datos (no se utiliza el texto)");
+	            System.out.println("Se vuelve a comprobar la accesibilidad de los enlaces que están en la base de datos (no se utiliza el texto ni se borra la BD)");
 	            System.out.println();
 	            
 	            List<String> linkList = ConexionBaseDeDatos.getAllURLs();
@@ -74,7 +84,7 @@ public class MostrarYComprobarEnlaces {
 	                
 	                System.out.println("Link identificado: " + link + " (" + codigoRespuesta + ")");
 	                
-	    			ConexionBaseDeDatos.updateResponseCode(finalURL, codigoRespuesta);
+	    			ConexionBaseDeDatos.updateResponseCode(link, finalURL, codigoRespuesta);
 	    			
 	    			numeroTotalEnlaces++;
 
@@ -89,7 +99,7 @@ public class MostrarYComprobarEnlaces {
 	    			String rutaPDF = args[i]; //Cojo la ruta del PDF
 	    			String doi = args[i + 1]; //Cojo el DOI del artículo 
 	    			
-	    			numeroTotalEnlaces += extraeEnlacesDeArticulo(doi, rutaPDF, forzarRegeneracionTexto, forzarBuscarEnlaces);
+	    			numeroTotalEnlaces += extraeEnlacesDeArticulo(doi, rutaPDF, searchLinksinPDF, searchLinksinText);
 	    		}
 	    		
 	    	}
@@ -130,29 +140,70 @@ public class MostrarYComprobarEnlaces {
 		return numeroTotalEnlaces;
 	}
 
-	private static int extraeEnlacesDeArticulo(String doi, String rutaPDF, boolean forzarRegeneracionTexto, boolean forzarBuscarEnlaces) {
+	private static int extraeEnlacesDeArticulo(String doi, String rutaPDF, boolean searchLinksinPDF, boolean searchLinksinText) {
 		//Comprobamos si la version TXT del documento ya existe en la cache
 		String nombreSinExtension = rutaPDF.substring(0, rutaPDF.length() - 3);
 		String nombreConExtensionTXT = nombreSinExtension + "txt";
 		String paperText = "";
 		int numeroDeEnlaces = 0;
 		
-		//Eliminamos los enlaces existentes en la BD
-		ConexionBaseDeDatos.EliminarEnlacesDeUnArticulo(doi);
+		if(searchLinksinPDF) {
+			
+			//Eliminamos los enlaces existentes en la BD
+			ConexionBaseDeDatos.EliminarEnlacesDeUnArticulo(doi);	
+			
+		}
 
 		// Si no hay un fichero de texto asociado, el PDF corresponde con un nuevo fichero
 		Path ficheroTexto = Paths.get(nombreConExtensionTXT);
-		boolean nuevoFicheroPDF = Files.exists(ficheroTexto);
+		boolean nuevoFicheroPDF = !Files.exists(ficheroTexto);
 		
-		if(nuevoFicheroPDF || forzarRegeneracionTexto) {
+		if(nuevoFicheroPDF || searchLinksinPDF || searchLinksinText) {
 
-			//Obtenemos el documento y lo transformamos a texto
-			PDDocument documento;
+			System.out.println();
+			System.out.println("Artículo: " + doi);
+			System.out.println("----------------------------------------------------------------------------------");
+			System.out.println();
+		}
+		
+		if(nuevoFicheroPDF || searchLinksinPDF) {
 
+			PDDocument documento = null;
+
+			//Obtenemos el documento y buscamos los enlaces
 			try {
 				
 				documento = PDDocument.load(new File(rutaPDF));
+				for(PDPage page : documento.getPages() ) {
+
+			        List<PDAnnotation> annotations = page.getAnnotations();
+			        for(PDAnnotation annotation : annotations ) {
+
+			            if( annotation instanceof PDAnnotationLink ) {
+			            	
+			                PDAnnotationLink link = (PDAnnotationLink)annotation;
+			                PDAction action = link.getAction();
+				            if(action instanceof PDActionURI ) {
+				            	
+				                PDActionURI uri = (PDActionURI)action;
+				                
+				                String url = uri.getURI();
+								String finalURL = obtenerEnlaceFinal(url);
+				                int codigoRespuesta = verificarExistencia(finalURL);
+				                
+								//ConexionBaseDeDatos.insertNewLinkForPaper(doi, url, finalURL, codigoRespuesta, "");
+								System.out.println("Link identificado (annotation): " + url + " (" + codigoRespuesta + ")");
+				            }
+				        }
+			        }
+			        
+			        // Borramos todas las anotaciones, lo que incluye los enlaces
+			        page.setAnnotations(null);
+			        
+			    }
+
 				
+			    
 			} catch (IOException e) {
 				
 		        System.err.println();
@@ -161,7 +212,7 @@ public class MostrarYComprobarEnlaces {
 				
 			}
 
-
+			//Transformamos el documento a texto, ya sin muchos enlaces
 			try {
 				
 				PDFTextStripper textStripper = new PDFTextStripper();
@@ -182,17 +233,12 @@ public class MostrarYComprobarEnlaces {
 			
 		}
 		
-		if(nuevoFicheroPDF || forzarRegeneracionTexto || forzarBuscarEnlaces) {
+		if(nuevoFicheroPDF || searchLinksinPDF || searchLinksinText) {
 
-			System.out.println();
-			System.out.println("Artículo: " + doi);
-			System.out.println("----------------------------------------------------------------------------------");
-			System.out.println();
-			
-		    //El problema con los matches es que vamos a tener muchos falsos negativos por
-		    //OCR incorrecto o el formato de los artículos. Tenemos que aplicar varias estrategias
-		    //para maximizar los enlaces colrrectos, ya que sacan mucho trabajo
-			
+			//El problema con los matches es que vamos a tener muchos falsos negativos por
+			//OCR incorrecto o el formato de los artículos. Tenemos que aplicar varias estrategias
+			//para maximizar los enlaces colrrectos, ya que sacan mucho trabajo
+
 			//Utilizamos inicialmente un regex conservador
 			//String simbolos = MARKER + "\\b(?:https?|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\\/%=~_|]";
 			String regex = MARKER + "(?:http|https|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%\\?=~_\\|\\!\\.]+[-a-zA-Z0-9+&@#\\/%=~_|]";
@@ -209,27 +255,39 @@ public class MostrarYComprobarEnlaces {
 			//Contamos el numero de enlaces extraidos
 			numeroDeEnlaces = numeroDeEnlaces + posicionEnlacesIdentificados.size();
 
-			//Eliminamos los CRLF, y volvemos a procesar
-			// Esto es necesario porque en muchos artículos las URLs rompen entre páginas
-			paperText = paperText.replaceAll("\\n", "");
-			posicionEnlacesIdentificados = getURLsFromPaperText(doi, paperText, accept200ResponseCodeOnly, regex);
-			paperText = unmarkURLS(paperText, posicionEnlacesIdentificados);
-			numeroDeEnlaces = numeroDeEnlaces + posicionEnlacesIdentificados.size();
-			
 			//Usamos un regex más liberal, que permite espacios pero debe terminar en / o con una extension
 			regex = MARKER + "(?:http|https|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%\\?=~_\\|\\!\\.: ]+(?:\\/|\\.pdf)";
 			posicionEnlacesIdentificados = getURLsFromPaperText(doi, paperText, accept200ResponseCodeOnly, regex);
 			paperText = unmarkURLS(paperText, posicionEnlacesIdentificados);
 			numeroDeEnlaces = numeroDeEnlaces + posicionEnlacesIdentificados.size();
-			
+
 			//Aceptamos cualquier cosa que termine con un signo de puntuacion o similar
 			regex = MARKER + "(?:http|https|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%\\?=~_\\|\\!\\.: ]+[^.,;\\\"'”´`\\[\\]]";
-
 			posicionEnlacesIdentificados = getURLsFromPaperText(doi, paperText, accept200ResponseCodeOnly, regex);
 			paperText = unmarkURLS(paperText, posicionEnlacesIdentificados);
 			numeroDeEnlaces = numeroDeEnlaces + posicionEnlacesIdentificados.size();
-			
-			
+
+			//Eliminamos los CRLF, y volvemos a procesar
+			// Esto es necesario porque en muchos artículos las URLs rompen entre páginas
+			regex = MARKER + "(?:http|https|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%\\?=~_\\|\\!\\.]+[-a-zA-Z0-9+&@#\\/%=~_|]";
+			paperText = paperText.replaceAll("\\n", "");
+			posicionEnlacesIdentificados = getURLsFromPaperText(doi, paperText, accept200ResponseCodeOnly, regex);
+			paperText = unmarkURLS(paperText, posicionEnlacesIdentificados);
+			numeroDeEnlaces = numeroDeEnlaces + posicionEnlacesIdentificados.size();
+
+			//Usamos un regex más liberal, que permite espacios pero debe terminar en / o con una extension
+			regex = MARKER + "(?:http|https|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%\\?=~_\\|\\!\\.: ]+(?:\\/|\\.pdf)";
+			posicionEnlacesIdentificados = getURLsFromPaperText(doi, paperText, accept200ResponseCodeOnly, regex);
+			paperText = unmarkURLS(paperText, posicionEnlacesIdentificados);
+			numeroDeEnlaces = numeroDeEnlaces + posicionEnlacesIdentificados.size();
+
+			//Aceptamos cualquier cosa que termine con un signo de puntuacion o similar
+			regex = MARKER + "(?:http|https|ftp):\\/\\/[-a-zA-Z0-9+&@#\\/%\\?=~_\\|\\!\\.: ]+[^.,;\\\"'”´`\\[\\]]";
+			posicionEnlacesIdentificados = getURLsFromPaperText(doi, paperText, accept200ResponseCodeOnly, regex);
+			paperText = unmarkURLS(paperText, posicionEnlacesIdentificados);
+			numeroDeEnlaces = numeroDeEnlaces + posicionEnlacesIdentificados.size();
+
+
 
 			//Y en general, podemos aplicar más estrategias aquí
 			//
@@ -254,24 +312,24 @@ public class MostrarYComprobarEnlaces {
 				System.err.println("Faltan por recuperar " + numeroHTTP + " enlaces en el fichero: " + ficheroTexto);
 
 			}
-		}
-				
-		try {
 
-			if(Files.exists(ficheroTexto)) {
+			try {
 
-				Files.delete(ficheroTexto);
+				if(Files.exists(ficheroTexto)) {
+
+					Files.delete(ficheroTexto);
+
+				}
+
+				Files.createFile(ficheroTexto);
+				Files.writeString(ficheroTexto, paperText, StandardCharsets.UTF_8);
+
+			} catch (IOException e) {
+
+				System.err.println();
+				System.err.println("No se puede escribir el fichero: " + ficheroTexto);
 
 			}
-
-			Files.createFile(ficheroTexto);
-			Files.writeString(ficheroTexto, paperText, StandardCharsets.UTF_8);
-
-		} catch (IOException e) {
-
-			System.err.println();
-			System.err.println("No se puede escribir el fichero: " + ficheroTexto);
-
 		}
 		
 		return numeroDeEnlaces;
@@ -314,7 +372,7 @@ public class MostrarYComprobarEnlaces {
 					//Primero vamos a procesar los URL correctos
 					if (!accept200ResponseCodeOnly || codigoRespuesta == 200) {
 
-						System.out.println("Link identificado: " + finalURL + " (" + codigoRespuesta + ")");
+						System.out.println("Link identificado (regex): " + finalURL + " (" + codigoRespuesta + ")");
 
 						//Obtenemos un poco de texto antes y después del elnace, que puede venir bien
 						//para el análisis posterior
@@ -341,7 +399,7 @@ public class MostrarYComprobarEnlaces {
 					//Primero vamos a procesar los URL correctos
 					if (!accept200ResponseCodeOnly || codigoRespuesta == 200) {
 
-						System.out.println("Link identificado: " + finalURL + " (" + codigoRespuesta + ")");
+						System.out.println("Link identificado (regex): " + finalURL + " (" + codigoRespuesta + ")");
 
 						//Obtenemos un poco de texto antes y después del elnace, que puede venir bien
 						//para el análisis posterior
@@ -365,7 +423,7 @@ public class MostrarYComprobarEnlaces {
 					//Primero vamos a procesar los URL correctos
 					if (!accept200ResponseCodeOnly || codigoRespuesta == 200) {
 
-						System.out.println("Link identificado: " + finalURL + " (" + codigoRespuesta + ")");
+						System.out.println("Link identificado (regex): " + finalURL + " (" + codigoRespuesta + ")");
 
 						//Obtenemos un poco de texto antes y después del elnace, que puede venir bien
 						//para el análisis posterior
@@ -494,7 +552,7 @@ public class MostrarYComprobarEnlaces {
                     .execute();
 
             return respuesta.statusCode();
-        } catch (IOException e) {
+        } catch (Exception e) {
             if (e instanceof HttpStatusException) {
                 HttpStatusException httpException = (HttpStatusException) e;
                 return httpException.getStatusCode();
@@ -505,7 +563,14 @@ public class MostrarYComprobarEnlaces {
     }
 	
 	private static String obtenerEnlaceFinal(String enlace) {
+		
+		//Si falta el protocolo, pues no hay nada que hacer
+		if(!enlace.startsWith("http")) {
+			return enlace;
+		}
+		
         try {
+        	
             Connection.Response respuesta = Jsoup.connect(enlace)
                     .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15")
                     .followRedirects(true)
@@ -514,9 +579,12 @@ public class MostrarYComprobarEnlaces {
                     .execute();
 
             return respuesta.url().toExternalForm();
-        } catch (IOException e) {
+            
+        } catch (Exception e) {
+        	
             return enlace;
+            
         }
     }
-
+	
 }

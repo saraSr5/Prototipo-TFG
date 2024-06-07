@@ -84,8 +84,12 @@ public class DescargarPdfCache {
     
     chequearDirectorioCache();
 
-    //Inicializar la base de datos
-    ConexionBaseDeDatos.initializeDatabase();
+    //Si no existe, inicializamos la BD
+    if(!ConexionBaseDeDatos.BDExist()) {
+    	
+        ConexionBaseDeDatos.initializeDatabase();
+
+    }
 
     for (String[] tituloYEnlace : titulosYEnlaces) {
         String tituloArticulo = tituloYEnlace[0];
@@ -120,19 +124,22 @@ public class DescargarPdfCache {
 			
 			if (!archivoExiste(destino) || forzarDescarga) { // Si el archivo no existe, lo descargo
 				
-				descargarPDF(url, destino);
+				boolean descargaCorrecta = descargarPDF(url, destino);
+				
+				if(descargaCorrecta) {
+					
+					// Miro si el nombre del PDF ya existe en la base de datos
+					if (!ConexionBaseDeDatos.isNombrePDFExistente(tituloArticulo)) {
 
-				// Miro si el nombre del PDF ya existe en la base de datos
-				if (!ConexionBaseDeDatos.isNombrePDFExistente(tituloArticulo)) {
+						// Inserto el nombre del PDF en la tabla de nombres
+						ConexionBaseDeDatos.insertNombrePDF(tituloArticulo);
+					}
 
-					// Inserto el nombre del PDF en la tabla de nombres
-					ConexionBaseDeDatos.insertNombrePDF(tituloArticulo);
+					System.err.println("Artículo descargado y añadido a la BD: " + "\"" + tituloArticulo + "\"");
+
+					// Agrego la ruta y el título a la salida
+					return new String[] { destino, tituloArticulo };
 				}
-
-				System.err.println("Artículo descargado y añadido a la BD: " + "\"" + tituloArticulo + "\"");
-
-				// Agrego la ruta y el título a la salida
-				return new String[] { destino, tituloArticulo };
 
 			} else {
 				
@@ -145,12 +152,14 @@ public class DescargarPdfCache {
 		return null;
 	}
 
-    public static void descargarPDF(String url, String destino) throws IOException { 
+    public static boolean descargarPDF(String url, String destino) throws IOException { 
         URI pdfURI = null;
+        
         try {
             pdfURI = new URI(url);
         } catch (URISyntaxException e) {
             e.printStackTrace();
+            return false;
         }
         URL pdfURL = pdfURI.toURL();
 
@@ -164,9 +173,13 @@ public class DescargarPdfCache {
                 fichero.write(buffer, 0, bytesLeidos);
             }
         } catch (IOException e) {
+        	
             System.err.println("Error al descargar el PDF: " + e.getMessage());
             e.printStackTrace();
+            return false;
+            
         }
+        return true;
     }
 
     //Función para comprobar si el archivo existe en la ruta especificada de descarga
